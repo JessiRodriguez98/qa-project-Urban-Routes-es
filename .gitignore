@@ -1,0 +1,12 @@
+.gradle/
+.idea/
+*.iml
+__pycache__/
+*.pyc
+*.log
+.env
+.vscode/
+.DS_Store
+.pytest/
+venv/
+.pytest_cache/
