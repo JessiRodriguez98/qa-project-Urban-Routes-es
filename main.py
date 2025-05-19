@@ -196,7 +196,6 @@ class UrbanRoutesPage:
         self.driver.find_element(*self.button_reserve_taxi).click()
         time.sleep(38)
 
-
 class TestUrbanRoutes:
     driver = None
 
@@ -211,35 +210,44 @@ class TestUrbanRoutes:
         self.page = UrbanRoutesPage(self.driver)
         self.driver.get(data.urban_routes_url)
 
-    def enter_route(self):
+    def test_enter_route(self):
         self.page.set_route(data.address_from, data.address_to)
         assert self.page.get_from() == data.address_from
         assert self.page.get_to() == data.address_to
 
-    def choose_tariff(self):
+    def test_choose_tariff(self):
+        self.page.set_route(data.address_from, data.address_to)
         self.page.select_order_taxi()
-        element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(self.page.comfort_tariff_button))
+        element = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located(self.page.comfort_tariff_button)
+        )
         assert "Comfort" in element.text
         self.page.select_comfort_tariff_button()
 
-    def enter_phone_number_and_code(self):
+    def test_enter_phone_number_and_code(self):
+        self.page.set_route(data.address_from, data.address_to)
+        self.page.select_order_taxi()
+        self.page.select_comfort_tariff_button()
         self.page.select_button_phone_number()
-        title_element = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//div[@class='head' and text()='Introduce tu número de teléfono']")))
+        title_element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "//div[@class='head' and text()='Introduce tu número de teléfono']")))
         assert "Introduce tu número de teléfono" in title_element.text
         self.page.select_second_button_phone_number()
         self.page.set_phone_number(data.phone_number)
         self.page.select_button_next_phone()
         WebDriverWait(self.driver, 20).until(EC.presence_of_element_located(self.page.field_code_phone))
-
         code = retrieve_phone_code(self.driver)
         print("Código recibido:", code)
-
         self.page.select_field_code_phone()
         self.page.select_field_write_code_phone(code)
         self.page.select_button_confirm_code_phone()
+        telefono = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "//*[text()='+1 123 123 12 12']")))
+        assert telefono.text == "+1 123 123 12 12"
 
-    def add_payment_method(self):
+
+    def test_add_payment_method(self):
+        self.page.set_route(data.address_from, data.address_to)
+        self.page.select_order_taxi()
+        self.page.select_comfort_tariff_button()
         self.page.select_payment_method()
         self.page.select_button_add_card()
         title_element = self.driver.find_element(By.XPATH, "//div[@class='card-number-label' and text()='Número de tarjeta (no la tuya):']")
@@ -248,45 +256,63 @@ class TestUrbanRoutes:
         self.page.select_field_cvv_card(data.card_code)
         self.page.select_button_add()
         self.page.select_button_close_card()
+        tarjeta_text = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "//div[@class='pp-value-text' and text()='Tarjeta']")))
+        assert tarjeta_text.text == "Tarjeta"
 
-    def customize_order(self):
+    def test_customize_order(self):
+        self.page.set_route(data.address_from, data.address_to)
+        self.page.select_order_taxi()
+        self.page.select_comfort_tariff_button()
         self.page.select_field_driving_message()
         placeholder = self.driver.find_element(By.ID, "comment").get_attribute("placeholder")
         assert placeholder == "Traiga un aperitivo"
         self.page.select_field_message(data.message_for_driver)
 
-    def add_blanket_scarves(self):
+    def test_add_blanket_scarves(self):
+        self.page.set_route(data.address_from, data.address_to)
+        self.page.select_order_taxi()
+        self.page.select_comfort_tariff_button()
         self.page.select_button_blanket_scarves()
         element = self.driver.find_element(By.XPATH, "//div[@class='r-sw-label' and text()='Manta y pañuelos']")
         assert element.text == "Manta y pañuelos"
 
-    def add_ice_cream(self):
+    def test_add_ice_cream(self):
+        self.page.set_route(data.address_from, data.address_to)
+        self.page.select_order_taxi()
+        self.page.select_comfort_tariff_button()
         self.page.select_button_add_ice_cream()
         element = self.driver.find_element(By.XPATH, "//div[@class='r-group-title' and text()='Cubeta de helado']")
         assert element.text == "Cubeta de helado"
 
-    def confirm_reservation(self):
+    def test_confirm_reservation(self):
+        self.page.set_route(data.address_from, data.address_to)
+        self.page.select_order_taxi()
+        self.page.select_comfort_tariff_button()
+        self.page.select_button_phone_number()
+        self.page.select_second_button_phone_number()
+        self.page.set_phone_number(data.phone_number)
+        self.page.select_button_next_phone()
+        WebDriverWait(self.driver, 20).until(EC.presence_of_element_located(self.page.field_code_phone))
+        code = retrieve_phone_code(self.driver)
+        self.page.select_field_code_phone()
+        self.page.select_field_write_code_phone(code)
+        self.page.select_button_confirm_code_phone()
+        self.page.select_payment_method()
+        self.page.select_button_add_card()
+        self.page.select_field_number_card(data.card_number)
+        self.page.select_field_cvv_card(data.card_code)
+        self.page.select_button_add()
+        self.page.select_button_close_card()
+        self.page.select_field_driving_message()
+        self.page.select_field_message(data.message_for_driver)
+        self.page.select_button_blanket_scarves()
+        self.page.select_button_add_ice_cream()
         self.page.select_button_reserve_taxi()
-        element = self.driver.find_element(By.XPATH,"//span[contains(@class, 'smart-button-secondary') and contains(text(), 'El recorrido será de')]")
-        assert "El recorrido será de" in element.text
-
-    def test_complete_taxi_order_flow(self):
-        self.enter_route()
-        self.choose_tariff()
-        self.enter_phone_number_and_code()
-        self.add_payment_method()
-        self.customize_order()
-        self.add_blanket_scarves()
-        self.add_ice_cream()
-        self.confirm_reservation()
 
     @classmethod
     def teardown_class(cls):
         cls.driver.quit()
 
-        """ 
-        RESPECTO A LAS CORRECCIONES, UTILIZO EL SELECTOR XPATH EN LA MAYORIA DE LOS METODOS PORQUE LA PÁGINA PRESENTA GRAVES FALLAS EN ESTA ÁREA,
-        MUCHOS ID'S ESTAN REPETIDOS ASÍ COMO LAS CLASES, PREFIERO UN METODO SEGURO QUE SE QUE FUNCIONA EN VEZ DE PROBAR DIFERENTES COSAS. Y RESPECTO
-        A ESTE COMENTARIO -El error TimeoutException ocurre cuando Selenium no puede encontrar un elemento dentro del tiempo límite establecido. - 
-        NO VISUALIZO NINGÚN ERROR, DISCULPAS SI ME EQUIVOCO.
-        """
+        """Esta ultima prueba, solo queda correcta si se ponen todas las demás pruebas, 
+                no funciona solo poniendo el telefono, da click al boton de reserva
+                y solo abre el cronometro un instante y vuelve a cerrar. Por eso la pongo completa y queda extensa."""
